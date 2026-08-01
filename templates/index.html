@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PalServer Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+    <div id="background-anim"></div>
+
+    <!-- Login View -->
+    <div id="login-view" class="view active">
+        <div class="login-card glass-card">
+            <h1 class="logo-title">🎮 PalServer Manager</h1>
+            <p class="subtitle">Secure Server Administration</p>
+            <form id="login-form">
+                <div class="input-group">
+                    <input type="password" id="login-password" placeholder="Password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-glow">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App View -->
+    <div id="app-view" class="view">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="glass-panel">
+            <div class="sidebar-header">
+                <h2>🎮 PalServer</h2>
+                <span class="version">Manager v1.0</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" data-target="dashboard" class="nav-item active">📊 Dashboard</a>
+                <a href="#" data-target="settings" class="nav-item">⚙️ Server Settings</a>
+                <a href="#" data-target="console" class="nav-item">🖥️ Console</a>
+                <a href="#" data-target="players" class="nav-item">👥 Players</a>
+                <a href="#" data-target="backups" class="nav-item">💾 Backups</a>
+                <a href="#" data-target="manager-settings" class="nav-item">🔧 Manager Config</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div id="sidebar-status-badge" class="status-badge status-stopped">
+                    <span class="status-indicator"></span>
+                    <span class="status-text">Stopped</span>
+                </div>
+                <button id="logout-btn" class="btn btn-icon" title="Logout">🚪</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content">
+            <!-- Dashboard Page -->
+            <section id="page-dashboard" class="page active">
+                <header class="page-header">
+                    <h2>Dashboard</h2>
+                    <div class="quick-actions">
+                        <button id="btn-quick-save" class="btn btn-secondary">💾 Save World</button>
+                    </div>
+                </header>
+
+                <div class="dashboard-grid">
+                    <!-- Status Cards -->
+                    <div class="status-cards">
+                        <div class="glass-card stat-card">
+                            <div class="stat-header">Server Status</div>
+                            <div id="dash-status" class="stat-value text-danger">Stopped</div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-header">Uptime</div>
+                            <div id="dash-uptime" class="stat-value">00:00:00</div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-header">Online Players</div>
+                            <div id="dash-players" class="stat-value">0 / 32</div>
+                        </div>
+                    </div>
+
+                    <!-- Resource Usage -->
+                    <div class="glass-card resource-card">
+                        <h3>Resource Usage</h3>
+                        <div class="progress-group">
+                            <label>CPU Usage <span id="cpu-val">0%</span></label>
+                            <div class="progress-bar-bg"><div id="cpu-bar" class="progress-bar fill-accent" style="width: 0%"></div></div>
+                        </div>
+                        <div class="progress-group mt-3">
+                            <label>Memory Usage <span id="mem-val">0 MB / 0 MB</span></label>
+                            <div class="progress-bar-bg"><div id="mem-bar" class="progress-bar fill-secondary" style="width: 0%"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Server Controls -->
+                    <div class="glass-card control-card">
+                        <h3>Server Controls</h3>
+                        <div class="control-buttons">
+                            <button id="btn-start" class="btn btn-success btn-glow">▶️ Start</button>
+                            <button id="btn-stop" class="btn btn-danger btn-glow" disabled>⏹ Stop</button>
+                            <button id="btn-restart" class="btn btn-warning btn-glow" disabled>🔄 Restart</button>
+                            <button id="btn-update" class="btn btn-primary btn-glow">⬆️ Update</button>
+                        </div>
+                    </div>
+
+                    <!-- Setup & Installation -->
+                    <div class="glass-card setup-card">
+                        <h3>Installation Status</h3>
+                        <div class="install-status">
+                            <div class="status-row">
+                                <span>SteamCMD:</span>
+                                <span id="steamcmd-status" class="badge bg-warning">Not Installed</span>
+                            </div>
+                            <div class="status-row">
+                                <span>PalServer:</span>
+                                <span id="server-status" class="badge bg-warning">Not Installed</span>
+                            </div>
+                        </div>
+                        <div class="install-actions mt-3" id="install-actions">
+                            <button id="btn-install-steamcmd" class="btn btn-primary">Install SteamCMD</button>
+                            <button id="btn-install-server" class="btn btn-secondary" disabled>Install Server</button>
+                        </div>
+                    </div>
+
+                    <!-- Broadcast -->
+                    <div class="glass-card broadcast-card">
+                        <h3>Broadcast Message</h3>
+                        <div class="input-group flex-row">
+                            <input type="text" id="broadcast-input" placeholder="Enter message to all players...">
+                            <button id="btn-broadcast" class="btn btn-primary">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Page -->
+            <section id="page-settings" class="page">
+                <header class="page-header">
+                    <h2>Server Settings</h2>
+                    <div class="header-actions">
+                        <button id="btn-settings-default" class="btn btn-secondary">Reset to Default</button>
+                        <button id="btn-settings-save" class="btn btn-primary btn-glow">Save Changes</button>
+                    </div>
+                </header>
+                
+                <div class="glass-card settings-container">
+                    <div class="settings-tabs" id="settings-tabs">
+                        <!-- Tabs generated via JS -->
+                    </div>
+                    <div class="settings-content" id="settings-content">
+                        <!-- Form generated via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Console Page -->
+            <section id="page-console" class="page">
+                <header class="page-header">
+                    <h2>Console</h2>
+                    <div class="header-actions">
+                        <label class="toggle-switch-wrapper">
+                            <span class="label-text">Auto Scroll</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="console-autoscroll" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </label>
+                        <button id="btn-console-clear" class="btn btn-secondary">Clear</button>
+                    </div>
+                </header>
+
+                <div class="glass-card console-container">
+                    <div id="console-output" class="console-output"></div>
+                    <div class="console-input-area">
+                        <span class="prompt">></span>
+                        <input type="text" id="console-input" placeholder="Enter RCON command..." autocomplete="off">
+                        <button id="btn-console-send" class="btn btn-primary">Send</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Players Page -->
+            <section id="page-players" class="page">
+                <header class="page-header">
+                    <h2>Online Players</h2>
+                    <button id="btn-players-refresh" class="btn btn-secondary">🔄 Refresh</button>
+                </header>
+
+                <div class="glass-card table-container">
+                    <table class="data-table" id="players-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>PlayerUID</th>
+                                <th>SteamID</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Players populated via JS -->
+                        </tbody>
+                    </table>
+                    <div id="players-empty" class="empty-state">
+                        <p>No players currently online.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Backups Page -->
+            <section id="page-backups" class="page">
+                <header class="page-header">
+                    <h2>Backups</h2>
+                    <button id="btn-backup-create" class="btn btn-success btn-glow">➕ Create Backup</button>
+                </header>
+
+                <div class="glass-card table-container">
+                    <table class="data-table" id="backups-table">
+                        <thead>
+                            <tr>
+                                <th>Filename</th>
+                                <th>Size</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Backups populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Manager Settings Page -->
+            <section id="page-manager-settings" class="page">
+                <header class="page-header">
+                    <h2>Manager Config</h2>
+                    <button id="btn-manager-save" class="btn btn-primary btn-glow">Save Config</button>
+                </header>
+
+                <div class="glass-card form-grid" id="manager-config-form">
+                    <!-- Config populated via JS -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-card glass-card">
+            <h3 id="modal-title">Confirm Action</h3>
+            <p id="modal-message">Are you sure?</p>
+            <div class="modal-actions">
+                <button id="modal-btn-cancel" class="btn btn-secondary">Cancel</button>
+                <button id="modal-btn-confirm" class="btn btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
