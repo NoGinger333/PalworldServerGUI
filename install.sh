@@ -49,35 +49,14 @@ else
 fi
 echo ""
 
-# 2. Python3確認・インストール
-echo "🐍 Python3 確認中..."
-if command -v python3 &> /dev/null; then
-    PYTHON_VERSION=$(python3 --version 2>&1)
-    success "Python3が見つかりました: ${PYTHON_VERSION}"
-else
-    echo "Python3をインストールします..."
-    sudo apt update
-    sudo apt install -y python3 python3-full
-    success "Python3をインストールしました"
-fi
-
-# 3. pip確認・インストール
-echo "📦 pip 確認中..."
-if python3 -m pip --version &> /dev/null; then
-    success "pipが見つかりました"
-else
-    echo "pipをインストールします..."
-    sudo apt install -y python3-pip
-    success "pipをインストールしました"
-fi
-
-# 4. venv確認・インストール
-echo "🔧 venv 確認中..."
-sudo apt install -y python3-venv python3-full > /dev/null 2>&1 || true
-success "venvが利用可能です"
+# 2. システムパッケージの自動インストール (Python3, pip, venv)
+echo "📦 システムパッケージ (Python3, pip, venv) を確認・インストール中..."
+sudo apt update -y > /dev/null 2>&1 || true
+sudo apt install -y python3 python3-pip python3-venv python3-full > /dev/null 2>&1 || true
+success "Python3 / pip / venv のセットアップが完了しました"
 echo ""
 
-# 5. 仮想環境作成
+# 3. 仮想環境作成
 echo "🏗️  仮想環境を作成中..."
 if [ -d "$VENV_DIR" ] && [ ! -f "${VENV_DIR}/bin/activate" ]; then
     warn "壊れた仮想環境を検出しました。再作成します..."
