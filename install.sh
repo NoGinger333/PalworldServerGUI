@@ -103,9 +103,9 @@ echo ""
 # 7. 初期設定ファイル生成
 if [ ! -f "${SCRIPT_DIR}/manager_config.json" ]; then
     echo "⚙️  初期設定ファイルを生成中..."
-    cat > "${SCRIPT_DIR}/manager_config.json" << 'EOF'
+    cat > "${SCRIPT_DIR}/manager_config.json" << EOF
 {
-    "server_path": "/home/steam/palworld",
+    "server_path": "${HOME}/palworld",
     "steamcmd_path": "/usr/games/steamcmd",
     "server_port": 8211,
     "rcon_enabled": true,
@@ -119,7 +119,7 @@ if [ ! -f "${SCRIPT_DIR}/manager_config.json" ]; then
     "auto_backup": false,
     "backup_interval_hours": 1,
     "max_backups": 10,
-    "backup_path": "/home/steam/palworld-backups",
+    "backup_path": "${HOME}/palworld-backups",
     "launch_params": "-useperfthreads -NoAsyncLoadingThread -UseMultithreadForDS",
     "web_port": 5000,
     "web_password": "admin"
