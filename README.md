@@ -28,38 +28,45 @@ Ubuntu上でパルワールド（Palworld）専用サーバーをWebブラウザ
 ## 🚀 インストール方法
 
 ### 必要環境
-- **Ubuntu** 20.04 / 22.04 / 24.04（Debian系も対応）
+- **Ubuntu** 20.04 / 22.04 / 24.04（Debian系・WSL2対応）
 - **Python 3.8** 以上
-- **sudo権限**（SteamCMDインストール時に必要）
+- **sudo権限**（依存パッケージインストール用）
 
-### 手順
+### インストール手順
 
 ```bash
 # 1. リポジトリをクローン
-git clone https://github.com/<your-username>/palserver-manager.git
-cd palserver-manager
+git clone https://github.com/NoGinger333/PalworldServerGUI.git
+cd PalworldServerGUI
 
-# 2. インストールスクリプトを実行
+# 2. インストールスクリプトを実行 (依存パッケージ・仮想環境の自動セットアップ)
 chmod +x install.sh run.sh
 bash install.sh
 
-# 3. サーバーを起動
+# 3. Web UIを起動
 ./run.sh
 ```
 
-ブラウザで `http://<サーバーIP>:5000` にアクセスしてください。
+ブラウザで `http://localhost:5000` （または `http://<サーバーIP>:5000`）にアクセスします。
 
-> **デフォルトパスワード: `admin`**
-> ⚠️ 初回ログイン後、マネージャー設定からパスワードを変更してください。
+> 🔑 **デフォルトログインパスワード: `admin`**
+> ⚠️ 初回ログイン後、左メニュー「🔧 Manager Config」からパスワードを変更してください。
+
+---
 
 ## 📖 初回セットアップガイド
 
-1. ブラウザでログイン（パスワード: `admin`）
-2. ダッシュボードの **「Install SteamCMD」** をクリック
-3. 完了後、**「Install Server」** をクリック
-4. **「🔧 マネージャー設定」** でRCONパスワード等を設定
-5. **「⚙️ サーバー設定」** でゲームバランス等を調整
-6. **「▶️ Start」** ボタンでサーバー起動！
+1. **Web UIにログイン**（パスワード: `admin`）
+2. ダッシュボードの **「Install SteamCMD」** をクリック（自動でインストールが進みます）
+3. 完了後、**「Install Server」** をクリック（コンソール画面に切り替わり、自動でパルワールドサーバーがダウンロードされます）
+4. インストール完了後、ダッシュボードの **「▶️ Start」** をクリックしてサーバーを起動！
+5. **ゲームから接続**:
+   - パルワールド専用サーバー選択画面の下部アドレス入力欄に `127.0.0.1:8211` または `http://<サーバーIP>:8211` を入力して「接続」
+
+> 💡 **WSL2環境の場合**:
+> ゲーム内およびWeb UIで接続するIPは、WSLで `hostname -I` を実行して表示されるIP（例: `172.22.12.8:8211`）を入力してください。
+
+---
 
 ## ⚙️ 設定
 
@@ -67,7 +74,8 @@ bash install.sh
 
 | 項目 | デフォルト値 | 説明 |
 |:--|:--|:--|
-| `server_path` | `/home/steam/palworld` | サーバーインストール先 |
+| `server_path` | `~/palworld` | サーバーインストール先（自動作成） |
+| `backup_path` | `~/palworld-backups` | バックアップ保存先（自動作成） |
 | `server_port` | `8211` | ゲームサーバーポート (UDP) |
 | `rcon_port` | `25575` | RCONポート |
 | `web_port` | `5000` | 管理画面のポート |
@@ -75,7 +83,7 @@ bash install.sh
 | `auto_restart_on_crash` | `true` | クラッシュ時自動再起動 |
 | `auto_update_on_restart` | `true` | 再起動時自動アップデート |
 
-GUIの「🔧 マネージャー設定」画面からも変更できます。
+GUIの「🔧 Manager Config」画面からも簡単に変更できます。
 
 ### ファイアウォール設定
 
