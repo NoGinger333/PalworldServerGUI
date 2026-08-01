@@ -353,11 +353,16 @@ class PalServerManager {
     }
 
     async updateServer() {
-        this.showConfirm('サーバーをアップデートしますか？（サーバーが停止中の場合のみ）', async () => {
+        this.showConfirm('サーバーをアップデートしますか？（サーバー停止中のみ実行可能）', async () => {
             try {
                 this.showToast('アップデートを開始しています...', 'info');
                 await this.apiCall('/server/update', 'POST');
-                this.showToast('アップデートを開始しました。コンソールで進捗を確認してください。', 'success');
+                this.showToast('アップデートを開始しました。コンソールで進捗を表示します。', 'success');
+                // コンソール画面に自動切り替え
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                const consoleNav = document.querySelector('.nav-item[data-target="console"]');
+                if (consoleNav) consoleNav.classList.add('active');
+                this.showPage('console');
             } catch (e) {
                 this.showToast(e.message || 'アップデートに失敗しました', 'error');
             }

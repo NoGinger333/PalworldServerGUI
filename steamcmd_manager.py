@@ -13,10 +13,28 @@ class SteamCMDManager:
         self.config = config
         self.app_id = "2394010" # パルワールド専用サーバーのAppID
 
+    def get_steamcmd_executable(self) -> str:
+        """実行可能なSteamCMDのパスを取得する。"""
+        configured_path = self.config.get("steamcmd_path", "/usr/games/steamcmd")
+        if os.path.exists(configured_path) and os.access(configured_path, os.X_OK):
+            return configured_path
+            
+        import shutil
+        which_path = shutil.which("steamcmd")
+        if which_path:
+            return which_path
+            
+        candidates = ["/usr/games/steamcmd", "/usr/bin/steamcmd", "/usr/local/bin/steamcmd"]
+        for candidate in candidates:
+            if os.path.exists(candidate):
+                return candidate
+                
+        return configured_path
+
     def is_installed(self) -> bool:
         """SteamCMDがインストール済みか確認する。"""
-        steamcmd_path = self.config.get("steamcmd_path")
-        return os.path.exists(steamcmd_path)
+        exe = self.get_steamcmd_executable()
+        return os.path.exists(exe)
 
     def install(self, callback=None):
         """SteamCMDをインストールする(Ubuntu向け)。"""
@@ -46,7 +64,7 @@ class SteamCMDManager:
 
     def is_server_installed(self) -> bool:
         """パルワールドサーバーがインストール済みか確認する。"""
-        server_path = self.config.get("server_path")
+        server_path = os.path.expanduser(self.config.get("server_path"))
         executable = os.path.join(server_path, "PalServer.sh")
         return os.path.exists(executable)
 
@@ -59,12 +77,12 @@ class SteamCMDManager:
         self._update_server_internal(callback, is_install=False)
 
     def _update_server_internal(self, callback=None, is_install=False):
-        steamcmd_path = self.config.get("steamcmd_path")
-        server_path = self.config.get("server_path")
+        steamcmd_path = self.get_steamcmd_executable()
+        server_path = os.path.expanduser(self.config.get("server_path"))
         
         if not self.is_installed():
             if callback:
-                callback("エラー: SteamCMDがインストールされていません。\n")
+                callback("エラー: SteamCMDが見つかりません。先にSteamCMDをインストールしてください。\n")
             return
 
         try:
