@@ -117,19 +117,31 @@ else
     warn "設定ファイルは既に存在します。スキップします。"
 fi
 
-# 8. 実行権限付与
+# 8. パルワールド専用サーバーの自動ダウンロード・インストール
+SERVER_PATH="${HOME}/palworld"
+if [ ! -f "${SERVER_PATH}/PalServer.sh" ]; then
+    echo "🎮 パルワールド専用サーバーをダウンロード・インストール中 (数分かかります)..."
+    mkdir -p "${SERVER_PATH}"
+    STEAMCMD_EXE="/usr/games/steamcmd"
+    if [ ! -f "$STEAMCMD_EXE" ]; then
+        STEAMCMD_EXE=$(which steamcmd 2>/dev/null || echo "steamcmd")
+    fi
+    "$STEAMCMD_EXE" +force_install_dir "${SERVER_PATH}" +login anonymous +app_update 2394010 validate +quit || true
+    success "パルワールド専用サーバーのダウンロードが完了しました"
+else
+    success "パルワールド専用サーバーは既にインストールされています"
+fi
+
+# 9. 実行権限付与
 chmod +x "${SCRIPT_DIR}/run.sh"
 echo ""
 
 echo "============================================="
-echo -e "${GREEN}  ✅ インストール完了！${NC}"
+echo -e "${GREEN}  ✅ オールインワン インストール完了！${NC}"
 echo "============================================="
 echo ""
 echo "  次のステップ:"
-echo "  1. 設定を確認・編集: nano ${SCRIPT_DIR}/manager_config.json"
-echo "  2. サーバーを起動:   ./run.sh"
-echo "  3. ブラウザでアクセス: http://localhost:5000"
-echo "  4. デフォルトパスワード: admin"
-echo ""
-echo "  ⚠️  セキュリティのため、初回ログイン後にパスワードを変更してください。"
+echo "  1. サーバーを起動:   ./run.sh"
+echo "  2. ブラウザでアクセス: http://localhost:5000"
+echo "  3. 「▶️ Start」ボタンを押して即遊べます！"
 echo ""
