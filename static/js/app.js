@@ -239,15 +239,35 @@ class PalServerManager {
     // ==========================================
     startPolling() {
         this.stopPolling();
-        this.statusInterval = setInterval(() => this.refreshStatus(), 5000);
+        this.statusInterval = setInterval(() => this.refreshStatus(), 3000);
         this.playerInterval = setInterval(() => {
             if (this.currentPage === 'players') this.refreshPlayers();
-        }, 30000);
+        }, 15000);
+        this.logInterval = setInterval(() => {
+            if (this.currentPage === 'console') this.refreshLogs();
+        }, 2000);
     }
 
     stopPolling() {
         if (this.statusInterval) clearInterval(this.statusInterval);
         if (this.playerInterval) clearInterval(this.playerInterval);
+        if (this.logInterval) clearInterval(this.logInterval);
+    }
+
+    async refreshLogs() {
+        try {
+            const logs = await this.apiCall('/logs');
+            if (Array.isArray(logs)) {
+                const out = document.getElementById('console-output');
+                const currentContent = out.textContent || '';
+                logs.forEach(line => {
+                    const cleanLine = line.trim();
+                    if (cleanLine && !currentContent.includes(cleanLine)) {
+                        this.appendLog(line, 'info');
+                    }
+                });
+            }
+        } catch (e) { /* ignore */ }
     }
 
     // ==========================================

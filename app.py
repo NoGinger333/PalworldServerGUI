@@ -1,4 +1,13 @@
 import os
+import sys
+
+# リアルタイムWebSocket配信のためのスレッドパッチ
+try:
+    import eventlet
+    eventlet.monkey_patch()
+except Exception:
+    pass
+
 from flask import Flask, request, jsonify, session, render_template
 from flask_socketio import SocketIO, emit
 from functools import wraps

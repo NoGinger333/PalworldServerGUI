@@ -112,17 +112,20 @@ class SteamCMDManager:
 
     def _run_command(self, cmd, callback=None, shell=False):
         """コマンドを実行し、出力をコールバックに渡す。"""
+        env = os.environ.copy()
+        env["PYTHONUNBUFFERED"] = "1"
         try:
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                shell=shell
+                bufsize=1,
+                shell=shell,
+                env=env
             )
 
-            while True:
-                line = process.stdout.readline()
+            for line in iter(process.stdout.readline, ''):
                 if not line and process.poll() is not None:
                     break
                 if line and callback:

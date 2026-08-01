@@ -69,13 +69,18 @@ class ServerManager:
         
         cmd = [executable] + launch_params
         
+        env = os.environ.copy()
+        env["PYTHONUNBUFFERED"] = "1"
+        
         try:
             self.process = subprocess.Popen(
                 cmd,
                 cwd=server_path,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                text=True
+                text=True,
+                bufsize=1,
+                env=env
             )
             
             self.start_time = time.time()
