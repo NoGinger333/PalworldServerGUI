@@ -49,11 +49,19 @@ else
 fi
 echo ""
 
-# 2. システムパッケージの自動インストール (Python3, pip, venv)
-echo "📦 システムパッケージ (Python3, pip, venv) を確認・インストール中..."
+# 2. システムパッケージとSteamCMDの自動インストール
+echo "📦 システムパッケージ (Python3, pip, venv, SteamCMD) を確認・インストール中..."
+sudo add-apt-repository multiverse -y > /dev/null 2>&1 || true
+sudo dpkg --add-architecture i386 > /dev/null 2>&1 || true
 sudo apt update -y > /dev/null 2>&1 || true
-sudo apt install -y python3 python3-pip python3-venv python3-full > /dev/null 2>&1 || true
-success "Python3 / pip / venv のセットアップが完了しました"
+
+# SteamCMD ライセンス自動同意
+echo steam steam/question select I AGREE | sudo debconf-set-selections > /dev/null 2>&1 || true
+echo steam steam/license note '' | sudo debconf-set-selections > /dev/null 2>&1 || true
+
+# 一括インストール
+sudo apt install -y python3 python3-pip python3-venv python3-full steamcmd lib32gcc-s1 > /dev/null 2>&1 || true
+success "Python3 / pip / venv / SteamCMD のセットアップが完了しました"
 echo ""
 
 # 3. 仮想環境作成
