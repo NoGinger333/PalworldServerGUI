@@ -67,7 +67,13 @@ class SteamCMDManager:
                 callback("エラー: SteamCMDがインストールされていません。\n")
             return
 
-        os.makedirs(server_path, exist_ok=True)
+        try:
+            os.makedirs(server_path, exist_ok=True)
+        except Exception as e:
+            if callback:
+                callback(f"エラー: ディレクトリ '{server_path}' の作成に失敗しました (権限エラーなど): {e}\n")
+            logger.error(f"ディレクトリ作成エラー: {e}")
+            return
         
         action = "インストール" if is_install else "アップデート"
         if callback:
