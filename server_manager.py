@@ -136,34 +136,56 @@ class ServerManager:
         self.status = 'stopping'
         self._stop_event.set()
         
-        try:
-            if save_first and self.config.get("rcon_enabled"):
+        # 1. RCONでのセーブとシャットダウン試行 (失敗しても続行)
+        if save_first and self.config.get("rcon_enabled"):
+            try:
                 self._emit_log("セーブとシャットダウンコマンドを送信します...")
                 self.execute_rcon("Save")
                 time.sleep(2)
-                self.execute_rcon("Shutdown 10 Server_is_shutting_down")
+                self.execute_rcon("Shutdown 5 Server_is_shutting_down")
                 
-                # 15秒間プロセスの終了を待つ
-                for _ in range(15):
+                # 8秒間プロセスの終了を待つ
+                for _ in range(8):
                     if self.process is None or self.process.poll() is not None:
                         break
                     time.sleep(1)
-            
-            if self.process and self.process.poll() is None:
-                self._emit_log("プロセスを強制終了します。")
-                self.process.terminate()
-                try:
-                    self.process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    self.process.kill()
+            except Exception as e:
+                self._emit_log(f"RCONセーブ/シャットダウンをスキップしました (未準備または非応答): {e}")
+
+        # 2. プロセスツリー全体の終了 (psutil)
+        if self.process and self.process.poll() is None:
+            self._emit_log("サーバープロセスを終了しています...")
+            try:
+                if HAS_PSUTIL:
+                    parent = psutil.Process(self.process.pid)
+                    children = parent.children(recursive=True)
+                    for child in children:
+                        child.terminate()
+                    parent.terminate()
                     
-        except Exception as e:
-            self._emit_log(f"サーバー停止中のエラー: {e}")
-            if self.process:
-                self.process.kill()
-                
+                    gone, alive = psutil.wait_procs(children + [parent], timeout=5)
+                    for p in alive:
+                        p.kill()
+                else:
+                    self.process.terminate()
+                    self.process.wait(timeout=5)
+            except Exception as e:
+                logger.error(f"プロセス終了エラー: {e}")
+                if self.process:
+                    try:
+                        self.process.kill()
+                    except Exception:
+                        pass
+
+        # 3. 万が一残ったPalServerプロセスを確実にシステムレベルでクリーンアップ (Linux)
+        try:
+            subprocess.run(["pkill", "-9", "-f", "PalServer"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        except Exception:
+            pass
+
         self.process = None
         self.status = 'stopped'
+        self._emit_log("サーバー停止処理が完了しました。")
 
     def restart(self, update=False):
         """サーバーを再起動する。"""
