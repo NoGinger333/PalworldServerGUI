@@ -76,7 +76,20 @@ def get_status():
     # SteamCMD/サーバーインストール状態も含める
     status['steamcmd_installed'] = steamcmd_mgr.is_installed()
     status['server_installed'] = steamcmd_mgr.is_server_installed()
-    status['max_players'] = 32
+    
+    # PalWorldSettings.ini から最大人数を動的に取得
+    max_players = 32
+    try:
+        ini_path = os.path.join(config.get('server_path'), "Pal", "Saved", "Config", "LinuxServer", "PalWorldSettings.ini")
+        if os.path.exists(ini_path):
+            parser = PalWorldSettings(ini_path)
+            settings = parser.load()
+            if 'ServerPlayerMaxNum' in settings:
+                max_players = int(settings['ServerPlayerMaxNum'])
+    except Exception as e:
+        logger.debug(f"ServerPlayerMaxNum 取得スキップ: {e}")
+
+    status['max_players'] = max_players
     # ステータス変更時にフロントエンドに通知するための措置
     socketio.emit('status_update', status, namespace='/console')
     return jsonify(status)
