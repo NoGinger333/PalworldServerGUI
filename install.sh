@@ -73,17 +73,17 @@ fi
 
 # 4. venv確認・インストール
 echo "🔧 venv 確認中..."
-if python3 -m venv --help &> /dev/null; then
-    success "venvが利用可能です"
-else
-    echo "python3-venvをインストールします..."
-    sudo apt install -y python3-venv
-    success "python3-venvをインストールしました"
-fi
+sudo apt install -y python3-venv python3-full > /dev/null 2>&1 || true
+success "venvが利用可能です"
 echo ""
 
 # 5. 仮想環境作成
 echo "🏗️  仮想環境を作成中..."
+if [ -d "$VENV_DIR" ] && [ ! -f "${VENV_DIR}/bin/activate" ]; then
+    warn "壊れた仮想環境を検出しました。再作成します..."
+    rm -rf "$VENV_DIR"
+fi
+
 if [ -d "$VENV_DIR" ]; then
     warn "仮想環境は既に存在します: ${VENV_DIR}"
 else
