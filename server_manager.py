@@ -231,11 +231,12 @@ class ServerManager:
 
     def get_players(self) -> list:
         """接続中のプレイヤー一覧を取得する。"""
+        # プロセスが実際に起動していない場合は試行しない
+        if not self.process or self.process.poll() is not None:
+            return []
+            
         try:
             resp = self.execute_rcon("ShowPlayers")
-            # レスポンス例:
-            # name,playeruid,steamid
-            # Player1,123456,76561198...
             lines = resp.strip().split('\n')
             if len(lines) <= 1:
                 return []
@@ -250,8 +251,11 @@ class ServerManager:
                         "steamid": parts[2]
                     })
             return players
+        except RconError:
+            # サーバー起動直後などRCON未準備時のエラーログ出力を抑止
+            return []
         except Exception as e:
-            logger.error(f"プレイヤー一覧取得エラー: {e}")
+            logger.debug(f"プレイヤー一覧取得スキップ: {e}")
             return []
 
     def kick_player(self, steam_id: str) -> str:
